@@ -1,6 +1,7 @@
 const express = require("express");
 const helmet = require("helmet");
 const morgan = require("morgan");
+const path = require("path");
 const dbConnection = require("./dbConnection/database");
 require("dotenv").config({ path: "config.env" });
 const mountRoutes = require("./routes");
@@ -15,7 +16,7 @@ dbConnection();
 
 //middlewares
 app.use(express.json());
-app.use(express.static("uploads"));
+app.use(express.static(path.join(__dirname, "uploads")));
 app.use(helmet());
 if (process.env.MODE === "DEV") app.use(morgan("dev"));
 
