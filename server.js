@@ -21,6 +21,9 @@ if (process.env.MODE === "DEV") app.use(morgan("dev"));
 
 //Mount Routes
 mountRoutes(app);
+app.use("/", (req, res) => {
+  res.status(200).send({ message: "hello world" });
+});
 app.use("*", (req, res, next) => next(new ApiError("page not found", 404)));
 
 //Handle Glopal Error
