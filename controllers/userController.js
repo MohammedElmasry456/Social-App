@@ -1,50 +1,57 @@
 const asyncHandler = require("express-async-handler");
 const bcryptjs = require("bcryptjs");
-const sharp = require("sharp");
-const { v4: uuidv4 } = require("uuid");
-const multer = require("multer");
+const upload = require("../middlewares/multerMiddleware");
+const cloudinary = require("../utils/cloudinary");
 const userModel = require("../models/userModel");
 const ApiError = require("../utils/apiError");
 const { getAll, deleteOne } = require("./refHandler");
 
 //Upload Image And Resize It
-const storage = multer.memoryStorage();
-const fileFilter = (req, file, cb) => {
-  if (
-    file.mimetype.startsWith("image/") ||
-    file.mimetype.startsWith("video/")
-  ) {
-    cb(null, true);
-  } else {
-    cb(new ApiError("Image Or Video Only", 400), false);
-  }
-};
-
-exports.uploadImage = multer({ storage, fileFilter }).fields([
+exports.uploadImage = upload.fields([
   { name: "profilePic", maxCount: 1 },
   { name: "coverPic", maxCount: 1 },
 ]);
 exports.resizeUploadedImage = async (req, res, next) => {
-  if (req.files.profilePic) {
-    const profilePicName = `profilePic-${Date.now()}${uuidv4()}.png`;
-    await sharp(req.files.profilePic[0].buffer)
-      .resize(400, 400)
-      .jpeg({ quality: 90 })
-      .toFormat("png")
-      .toFile(`uploads/users/${profilePicName}`);
-    req.body.profilePic = profilePicName;
-  }
-  if (req.files.coverPic) {
-    const coverPicName = `coverPic-${Date.now()}${uuidv4()}.jpeg`;
-    await sharp(req.files.coverPic[0].buffer)
-      .resize(851, 315)
-      .jpeg({ quality: 90 })
-      .toFormat("jpeg")
-      .toFile(`uploads/users/${coverPicName}`);
-    req.body.coverPic = coverPicName;
-  }
+  if (req.files) {
+    if (req.files.profilePic) {
+      await cloudinary.uploader
+        .upload(req.files.profilePic[0].path, {
+          folder: "Social-App/Users/profilePic",
+          transformation: [
+            {
+              width: 400,
+              height: 400,
+              gravity: "faces",
+              crop: "fill",
+            },
+            { quality: "auto", fetch_format: "auto" },
+          ],
+        })
+        .then((result) => {
+          req.body.profilePic = result.url;
+        });
+    }
+    if (req.files.coverPic) {
+      await cloudinary.uploader
+        .upload(req.files.coverPic[0].path, {
+          folder: "Social-App/Users/coverPic",
+          transformation: [
+            {
+              width: 851,
+              height: 315,
+              gravity: "auto",
+              crop: "fill",
+            },
+            { quality: "auto", fetch_format: "auto" },
+          ],
+        })
+        .then((result) => {
+          req.body.coverPic = result.url;
+        });
+    }
 
-  next();
+    next();
+  }
 };
 
 //Update User Info

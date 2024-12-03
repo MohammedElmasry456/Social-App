@@ -12,31 +12,37 @@ const userModel = require("../models/userModel");
 const upload = require("../middlewares/multerMiddleware");
 const cloudinary = require("../utils/cloudinary");
 
-exports.uploadImage = upload.single("img");
+//Upload Image And Resize It
+exports.uploadImage = upload.array("img");
 exports.resizeUploadedImage = async (req, res, next) => {
-  if (req.file) {
+  if (req.files) {
+    const imgs = [];
     const options = {
-      folder: "uploads",
+      folder: "Social-App/Posts",
       quality: "auto",
       fetch_format: "auto",
     };
-
-    if (req.file.mimetype.startsWith("image")) {
-      options.transformation = {
-        width: 400,
-        height: 400,
-        gravity: "faces",
-        crop: "fill",
-      };
-    } else {
-      options.resource_type = "video";
-    }
-    await cloudinary.uploader
-      .upload(req.file.path, options)
-      .then((result) => {
-        req.body.img = result.url;
+    await Promise.all(
+      req.files.map(async (el) => {
+        if (el.mimetype.startsWith("image")) {
+          options.transformation = {
+            width: 400,
+            height: 400,
+            gravity: "faces",
+            crop: "fill",
+          };
+        } else {
+          options.resource_type = "video";
+        }
+        await cloudinary.uploader
+          .upload(el.path, options)
+          .then((result) => {
+            imgs.push(result.url);
+          })
+          .catch((e) => console.log(e));
       })
-      .catch((e) => console.log(e));
+    );
+    req.body.img = imgs;
   }
   next();
 };

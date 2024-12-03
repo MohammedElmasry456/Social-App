@@ -70,15 +70,6 @@ userSchema.virtual("posts", {
   foreignField: "userId",
 });
 
-userSchema.post("init", (doc) => {
-  if (doc.profilePic) {
-    doc.profilePic = `${process.env.URL}/users/${doc.profilePic}`;
-  }
-  if (doc.coverPic) {
-    doc.coverPic = `${process.env.URL}/users/${doc.coverPic}`;
-  }
-});
-
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
   this.password = await bcryptjs.hash(this.password, 12);

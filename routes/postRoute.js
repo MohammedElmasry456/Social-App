@@ -40,7 +40,7 @@ router.get(
 router
   .route("/:id")
   .get(getPost)
-  .put(protect, allowedTo(false), updatePost)
+  .put(protect, allowedTo(false), uploadImage, resizeUploadedImage, updatePost)
   .delete(protect, deletePost);
 
 router.put("/:id/likePost", protect, allowedTo(false), likeAndDislike);

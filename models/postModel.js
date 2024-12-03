@@ -20,20 +20,5 @@ const postSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-const setUrl = (doc) => {
-  const imgs = [];
-  doc.img.map((e) => {
-    imgs.push(`${process.env.URL}/posts/${e}`);
-  });
-  doc.img = imgs;
-};
-
-// postSchema.post("save", (doc) => {
-//   setUrl(doc);
-// });
-// postSchema.post("init", (doc) => {
-//   setUrl(doc);
-// });
-
 const postModel = mongoose.model("Post", postSchema);
 module.exports = postModel;
