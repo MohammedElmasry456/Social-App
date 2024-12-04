@@ -5,6 +5,7 @@ const cloudinary = require("../utils/cloudinary");
 const userModel = require("../models/userModel");
 const ApiError = require("../utils/apiError");
 const { getAll, deleteOne } = require("./refHandler");
+const { deleteImage } = require("../utils/deleteImage");
 
 //Upload Image And Resize It
 exports.uploadImage = upload.fields([
@@ -57,15 +58,18 @@ exports.resizeUploadedImage = async (req, res, next) => {
 //Update User Info
 exports.updateUser = asyncHandler(async (req, res, next) => {
   const { id } = req.params;
+  const oldUser = await userModel.findById(id);
+  if (!oldUser) {
+    return next(new ApiError("User Not Found", 404));
+  }
+  await deleteImage(oldUser, req);
+
   // eslint-disable-next-line no-unused-vars
   const { password, ...data } = req.body;
   const user = await userModel.findByIdAndUpdate(id, data, {
     new: true,
     runValidators: true,
   });
-  if (!user) {
-    return next(new ApiError("User Not Found", 404));
-  }
 
   res.status(200).send({ message: "User Updated Successfully", data: user });
 });
@@ -126,22 +130,24 @@ exports.deleteUser = deleteOne(userModel);
 //get Me
 exports.getMe = asyncHandler(async (req, res, next) => {
   req.params.id = req.user._id;
-  console.log(req.params.id);
   next();
 });
 
 //updateMe
 exports.updateMe = asyncHandler(async (req, res, next) => {
   const id = req.user._id;
+  const oldUser = await userModel.findById(id);
+  if (!oldUser) {
+    return next(new ApiError("User Not Found", 404));
+  }
+  await deleteImage(oldUser, req);
+
   // eslint-disable-next-line no-unused-vars
   const { password, isAdmin, ...data } = req.body;
   const user = await userModel.findByIdAndUpdate(id, data, {
     new: true,
     runValidators: true,
   });
-  if (!user) {
-    return next(new ApiError("User Not Found", 404));
-  }
 
   res.status(200).send({ message: "User Updated Successfully", data: user });
 });

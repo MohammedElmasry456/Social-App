@@ -3,6 +3,7 @@ const ApiError = require("../utils/apiError");
 const ApiFeature = require("../utils/apiFeatures");
 const postModel = require("../models/postModel");
 const commentModel = require("../models/commentModel");
+const { deleteImage } = require("../utils/deleteImage");
 
 //create document
 exports.createOne = (model) =>
@@ -16,6 +17,17 @@ exports.createOne = (model) =>
 //update document
 exports.updateOne = (model) =>
   asyncHandler(async (req, res, next) => {
+    const oldDoc = await model.findOne({
+      _id: req.params.id,
+      userId: req.user._id,
+    });
+    if (!oldDoc) {
+      return next(
+        new ApiError("document Not Found Or Document Not Belong To You", 404)
+      );
+    }
+    await deleteImage(oldDoc, req);
+
     const document = await model.findOneAndUpdate(
       { _id: req.params.id, userId: req.user._id },
       req.body,
@@ -23,11 +35,7 @@ exports.updateOne = (model) =>
         new: true,
       }
     );
-    if (!document) {
-      return next(
-        new ApiError("document Not Found Or Document Not Belong To You", 404)
-      );
-    }
+
     res
       .status(200)
       .send({ message: "document Updated Successfully", data: document });
@@ -91,5 +99,6 @@ exports.deleteOne = (model) =>
         new ApiError("Document Not Found Or Is Not Belong To You", 404)
       );
     }
+    await deleteImage(document, req);
     res.status(204).send();
   });

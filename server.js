@@ -2,6 +2,7 @@ const express = require("express");
 const helmet = require("helmet");
 const morgan = require("morgan");
 const path = require("path");
+const compression = require("compression");
 const dbConnection = require("./dbConnection/database");
 require("dotenv").config({ path: "config.env" });
 const mountRoutes = require("./routes");
@@ -10,6 +11,9 @@ const glopalError = require("./middlewares/errorMiddleware");
 
 const app = express();
 const port = process.env.PORT;
+
+// compress all responses
+app.use(compression());
 
 //dbConnection
 dbConnection();
