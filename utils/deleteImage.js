@@ -17,6 +17,10 @@ exports.deleteImage = async (document, req) => {
         .split(".")[0];
       await deleteProcess(imageId);
     }
+    if (req.body.groupPic && document.groupPic !== "") {
+      imageId = document.groupPic.split("/").slice(-4).join("/").split(".")[0];
+      await deleteProcess(imageId);
+    }
     if (req.body.coverPic && document.coverPic !== "") {
       imageId = document.coverPic.split("/").slice(-4).join("/").split(".")[0];
       await deleteProcess(imageId);

@@ -1,5 +1,5 @@
 const express = require("express");
-const { protect, allowedTo } = require("../controllers/authController");
+const { protect, allowedToAdmin } = require("../controllers/authController");
 const {
   getComment,
   getComments,
@@ -15,12 +15,12 @@ const router = express.Router({ mergeParams: true });
 router
   .route("/")
   .get(setQuery, getComments)
-  .post(protect, allowedTo(false), setPostIdAndUserId, createComment);
+  .post(protect, allowedToAdmin(false), setPostIdAndUserId, createComment);
 
 router
   .route("/:id")
   .get(getComment)
-  .put(protect, allowedTo(false), updateComment)
+  .put(protect, allowedToAdmin(false), updateComment)
   .delete(protect, deleteComment);
 
 module.exports = router;

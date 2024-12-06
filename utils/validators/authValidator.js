@@ -32,14 +32,6 @@ exports.registerValidator = [
     .withMessage("Password is required")
     .isLength({ min: 8 })
     .withMessage("min length of password equal 8"),
-  // .custom((val) => {
-  //   const regex =
-  //     /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@.#$!%*?&])[A-Za-z\d@.#$!%*?&]/;
-  //   if (!regex.test(val)) {
-  //     throw new Error("Invalid Password");
-  //   }
-  //   return true;
-  // })
   validatorMiddleware,
 ];
 

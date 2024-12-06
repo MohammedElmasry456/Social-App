@@ -1,6 +1,7 @@
 const { check } = require("express-validator");
 const validatorMiddleware = require("../../middlewares/validatorMiddleware");
 const userModel = require("../../models/userModel");
+const groupModel = require("../../models/groupModel");
 
 exports.updateUserValidator = [
   check("userName")
@@ -63,7 +64,7 @@ exports.followUserValidator = [
       async (val, { req }) =>
         await userModel.findById(val).then((user) => {
           if (user) {
-            if (val === req.user._id) {
+            if (val === req.user._id.toString()) {
               return Promise.reject(new Error("You Can't Follow Yourself"));
             }
             if (user.followers.includes(req.user._id)) {
@@ -86,12 +87,54 @@ exports.unfollowUserValidator = [
       async (val, { req }) =>
         await userModel.findById(val).then((user) => {
           if (user) {
-            if (val === req.user._id) {
+            if (val === req.user._id.toString()) {
               return Promise.reject(new Error("You Can't unFollow Yourself"));
             }
             if (!user.followers.includes(req.user._id)) {
               return Promise.reject(
                 new Error("You Already don't Follow This User")
+              );
+            }
+          }
+        })
+    ),
+  validatorMiddleware,
+];
+
+exports.followGroupValidator = [
+  check("id").optional().isMongoId().withMessage("Invalid Id"),
+  check("groupId")
+    .notEmpty()
+    .withMessage("groupId is required")
+    .isMongoId()
+    .withMessage("Invalid groupId")
+    .custom(
+      async (val, { req }) =>
+        await groupModel.findById(val).then((group) => {
+          if (group) {
+            if (group.followers.includes(req.user._id)) {
+              return Promise.reject(new Error("You Already Follow This Group"));
+            }
+          }
+        })
+    ),
+  validatorMiddleware,
+];
+
+exports.unfollowGroupValidator = [
+  check("id").optional().isMongoId().withMessage("Invalid Id"),
+  check("groupId")
+    .notEmpty()
+    .withMessage("groupId is required")
+    .isMongoId()
+    .withMessage("Invalid groupId")
+    .custom(
+      async (val, { req }) =>
+        await groupModel.findById(val).then((group) => {
+          if (group) {
+            if (!group.followers.includes(req.user._id)) {
+              return Promise.reject(
+                new Error("You Already unFollow This Group")
               );
             }
           }

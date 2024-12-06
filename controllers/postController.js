@@ -11,6 +11,7 @@ const ApiError = require("../utils/apiError");
 const userModel = require("../models/userModel");
 const upload = require("../middlewares/multerMiddleware");
 const cloudinary = require("../utils/cloudinary");
+const groupModel = require("../models/groupModel");
 
 //Upload Image And Resize It
 exports.uploadImage = upload.array("img");
@@ -47,9 +48,29 @@ exports.resizeUploadedImage = async (req, res, next) => {
   next();
 };
 
-// set User Id
-exports.setUserId = async (req, res, next) => {
+//set query for filtering
+exports.setQuery = async (req, res, next) => {
+  const queryFilter = req.params.groupId ? { groupId: req.params.groupId } : {};
+  req.filter_ = queryFilter;
+  next();
+};
+
+// set User Id And Group Id
+exports.setUserIdAndGroupId = async (req, res, next) => {
   req.body.userId = req.body.userId ? req.body.userId : req.user._id;
+  req.body.groupId = req.params.groupId ? req.params.groupId : req.body.groupId;
+  if (req.body.groupId) {
+    const group = await groupModel.findById(req.body.groupId);
+    if (!group) {
+      return next(new ApiError("Group Not Found", 404));
+    }
+    if (
+      !group.followers.includes(req.body.userId) &&
+      !group.admins.includes(req.body.userId)
+    ) {
+      return next(new ApiError("You Must Follow This Group First", 400));
+    }
+  }
   next();
 };
 

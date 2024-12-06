@@ -6,6 +6,7 @@ const userModel = require("../models/userModel");
 const ApiError = require("../utils/apiError");
 const { getAll, deleteOne } = require("./refHandler");
 const { deleteImage } = require("../utils/deleteImage");
+const groupModel = require("../models/groupModel");
 
 //Upload Image And Resize It
 exports.uploadImage = upload.fields([
@@ -108,11 +109,15 @@ exports.getUser = asyncHandler(async (req, res, next) => {
     .findById(id)
     .populate({
       path: "followers",
-      select: "userName -_id",
+      select: "userName",
     })
     .populate({
       path: "followings",
-      select: "userName -_id",
+      select: "userName",
+    })
+    .populate({
+      path: "myGroups",
+      select: "name",
     })
     .populate({ path: "posts" });
   if (!user) {
@@ -121,6 +126,32 @@ exports.getUser = asyncHandler(async (req, res, next) => {
   res
     .status(200)
     .send({ message: "User Has Been Fetched Successfully", data: user });
+});
+
+//delete refrences to the user
+exports.deleteReference = asyncHandler(async (req, res, next) => {
+  const user = await userModel.findById(req.params.id);
+  if (!user) {
+    return next(new ApiError("User Not Found", 404));
+  }
+  await Promise.all(
+    user.followers.map(async (follower) => {
+      await userModel.findByIdAndUpdate(follower, {
+        $pull: { followings: req.params.id },
+      });
+    }),
+    user.followings.map(async (following) => {
+      await userModel.findByIdAndUpdate(following, {
+        $pull: { followers: req.params.id },
+      });
+    }),
+    user.myGroups.map(async (following) => {
+      await groupModel.findByIdAndUpdate(following, {
+        $pull: { followers: req.params.id },
+      });
+    })
+  );
+  next();
 });
 
 //Delete User
@@ -230,3 +261,55 @@ exports.unfollowUser = asyncHandler(async (req, res, next) => {
 
 //delete My Account
 exports.deleteMyAccount = deleteOne(userModel);
+
+//follow Group
+exports.followGroup = asyncHandler(async (req, res, next) => {
+  const id = req.user._id;
+  const group = await groupModel.findByIdAndUpdate(req.body.groupId, {
+    $push: { followers: id },
+  });
+  if (!group) {
+    return next(new ApiError("Group Not Found", 404));
+  }
+  const currentUser = await userModel.findByIdAndUpdate(
+    id,
+    {
+      $push: { myGroups: req.body.groupId },
+    },
+    { new: true }
+  );
+
+  if (!currentUser) {
+    return next(new ApiError("current user Not Found", 404));
+  }
+  res
+    .status(200)
+    .send({ message: "now, You follow this group", data: currentUser });
+});
+
+//unfollow Group
+exports.unfollowGroup = asyncHandler(async (req, res, next) => {
+  const id = req.user._id;
+  const group = await groupModel.findByIdAndUpdate(req.body.groupId, {
+    $pull: { followers: id },
+  });
+
+  if (!group) {
+    return next(new ApiError("Group Not Found", 404));
+  }
+
+  const currentUser = await userModel.findByIdAndUpdate(
+    id,
+    {
+      $pull: { myGroups: req.body.groupId },
+    },
+    { new: true }
+  );
+
+  if (!currentUser) {
+    return next(new ApiError("current user Not Found", 404));
+  }
+  res
+    .status(200)
+    .send({ message: "now, You unfollow this group", data: currentUser });
+});

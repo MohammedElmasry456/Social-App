@@ -45,6 +45,12 @@ const userSchema = new mongoose.Schema(
         ref: "User",
       },
     ],
+    myGroups: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Group",
+      },
+    ],
     desc: {
       type: String,
     },

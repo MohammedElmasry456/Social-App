@@ -4,11 +4,18 @@ const ApiFeature = require("../utils/apiFeatures");
 const postModel = require("../models/postModel");
 const commentModel = require("../models/commentModel");
 const { deleteImage } = require("../utils/deleteImage");
+const groupModel = require("../models/groupModel");
+const userModel = require("../models/userModel");
 
 //create document
 exports.createOne = (model) =>
   asyncHandler(async (req, res) => {
     const document = await model.create(req.body);
+    if (model === groupModel) {
+      await userModel.findByIdAndUpdate(req.user._id, {
+        $push: { myGroups: document._id },
+      });
+    }
     res
       .status(201)
       .send({ message: "document created Successfully", data: document });
@@ -17,10 +24,12 @@ exports.createOne = (model) =>
 //update document
 exports.updateOne = (model) =>
   asyncHandler(async (req, res, next) => {
-    const oldDoc = await model.findOne({
-      _id: req.params.id,
-      userId: req.user._id,
-    });
+    const query =
+      model === postModel || model === commentModel
+        ? { _id: req.params.id, userId: req.user._id }
+        : { _id: req.params.id };
+
+    const oldDoc = await model.findOne(query);
     if (!oldDoc) {
       return next(
         new ApiError("document Not Found Or Document Not Belong To You", 404)
@@ -28,13 +37,9 @@ exports.updateOne = (model) =>
     }
     await deleteImage(oldDoc, req);
 
-    const document = await model.findOneAndUpdate(
-      { _id: req.params.id, userId: req.user._id },
-      req.body,
-      {
-        new: true,
-      }
-    );
+    const document = await model.findOneAndUpdate(query, req.body, {
+      new: true,
+    });
 
     res
       .status(200)

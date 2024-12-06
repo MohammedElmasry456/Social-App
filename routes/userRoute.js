@@ -14,6 +14,9 @@ const {
   updateMe,
   ChangeMyPassword,
   deleteMyAccount,
+  followGroup,
+  unfollowGroup,
+  deleteReference,
 } = require("../controllers/userController");
 const {
   updatePasswordValidator,
@@ -22,8 +25,10 @@ const {
   deleteUserValidator,
   followUserValidator,
   unfollowUserValidator,
+  followGroupValidator,
+  unfollowGroupValidator,
 } = require("../utils/validators/userValidator");
-const { protect, allowedTo } = require("../controllers/authController");
+const { protect, allowedToAdmin } = require("../controllers/authController");
 
 const router = express.Router();
 
@@ -42,26 +47,48 @@ router.put(
   updateMe
 );
 router.put("/ChangeMyPassword", updatePasswordValidator, ChangeMyPassword);
-router.put("/follow", allowedTo(false), followUserValidator, followUser);
-router.put("/unfollow", allowedTo(false), unfollowUserValidator, unfollowUser);
-router.delete("/deleteMyAccount", getMe, deleteMyAccount);
+router.put("/follow", allowedToAdmin(false), followUserValidator, followUser);
+router.put(
+  "/unfollow",
+  allowedToAdmin(false),
+  unfollowUserValidator,
+  unfollowUser
+);
+router.put(
+  "/followGroup",
+  allowedToAdmin(false),
+  followGroupValidator,
+  followGroup
+);
+router.put(
+  "/unfollowGroup",
+  allowedToAdmin(false),
+  unfollowGroupValidator,
+  unfollowGroup
+);
+router.delete("/deleteMyAccount", getMe, deleteReference, deleteMyAccount);
 
 //other
 router
   .route("/:id")
   .get(getUserValidator, getUser)
   .put(
-    allowedTo(true),
+    allowedToAdmin(true),
     uploadImage,
     resizeUploadedImage,
     updateUserValidator,
     updateUser
   )
-  .delete(allowedTo(true), deleteUserValidator, deleteUser);
+  .delete(
+    allowedToAdmin(true),
+    deleteUserValidator,
+    deleteReference,
+    deleteUser
+  );
 
 router.put(
   "/:id/password",
-  allowedTo(true),
+  allowedToAdmin(true),
   updatePasswordValidator,
   updatePassword
 );

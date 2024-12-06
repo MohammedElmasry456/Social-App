@@ -22,7 +22,6 @@ exports.setQuery = async (req, res, next) => {
 
 exports.setPostIdAndUserId = async (req, res, next) => {
   req.body.postId = req.body.postId ? req.body.postId : req.params.postId;
-  // req.body.userId = req.body.userId ? req.body.userId : req.params.userId;
   req.body.userId = req.params.userId ? req.params.userId : req.user._id;
   next();
 };

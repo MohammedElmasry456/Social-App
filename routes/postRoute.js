@@ -10,39 +10,46 @@ const {
   getTimeLinePosts,
   uploadImage,
   resizeUploadedImage,
-  setUserId,
+  setQuery,
+  setUserIdAndGroupId,
 } = require("../controllers/postController");
-const { protect, allowedTo } = require("../controllers/authController");
+const { protect, allowedToAdmin } = require("../controllers/authController");
 
-const router = express.Router();
+const router = express.Router({ mergeParams: true });
 
 router.use("/:postId/comments", commentRoute);
 router
   .route("/")
-  .get(getPosts)
+  .get(setQuery, getPosts)
   .post(
     protect,
-    allowedTo(false),
+    allowedToAdmin(false),
     uploadImage,
     resizeUploadedImage,
-    setUserId,
+    setUserIdAndGroupId,
     createPost
   );
 
 router.get(
   "/getTimeLinePosts",
   protect,
-  allowedTo(false),
-  setUserId,
+  allowedToAdmin(false),
+  setUserIdAndGroupId,
   getTimeLinePosts
 );
 
 router
   .route("/:id")
   .get(getPost)
-  .put(protect, allowedTo(false), uploadImage, resizeUploadedImage, updatePost)
+  .put(
+    protect,
+    allowedToAdmin(false),
+    uploadImage,
+    resizeUploadedImage,
+    updatePost
+  )
   .delete(protect, deletePost);
 
-router.put("/:id/likePost", protect, allowedTo(false), likeAndDislike);
+router.put("/:id/likePost", protect, allowedToAdmin(false), likeAndDislike);
 
 module.exports = router;

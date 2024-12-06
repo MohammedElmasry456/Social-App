@@ -61,7 +61,7 @@ exports.protect = asyncHandler(async (req, res, next) => {
 });
 
 //allowed to
-exports.allowedTo = (...options) =>
+exports.allowedToAdmin = (...options) =>
   asyncHandler(async (req, res, next) => {
     if (!options.includes(req.user.isAdmin)) {
       return next(new ApiError("You Are Not Allowed To Acces This Route", 403));
