@@ -1,7 +1,7 @@
 const express = require("express");
 const helmet = require("helmet");
+const cors = require("cors");
 const morgan = require("morgan");
-const path = require("path");
 const compression = require("compression");
 const dbConnection = require("./dbConnection/database");
 require("dotenv").config({ path: "config.env" });
@@ -20,8 +20,8 @@ dbConnection();
 
 //middlewares
 app.use(express.json());
-app.use(express.static(path.join(__dirname, "uploads")));
 app.use(helmet());
+app.use(cors());
 if (process.env.MODE === "DEV") app.use(morgan("dev"));
 
 //Mount Routes
